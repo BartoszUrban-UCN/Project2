@@ -1,9 +1,9 @@
 .idea/
 .svn/
-out/
 .vscode/
+out/
 main/
-MiniProject_Concurrency.iml
+.iml
 .form
 .project
 .classpath
