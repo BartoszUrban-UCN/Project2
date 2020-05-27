@@ -18,14 +18,13 @@ public class LoginMenu extends JFrame {
 
     private static final long serialVersionUID = 1L;
 
-    private static Updatable currentMenu;
-    private static int delayTime;
-
     private static Employee loggedEmployee;
 
     private JPanel mainPanel;
     private JLabel logo;
     private JLabel message;
+    private JLabel loginExample1;
+    private JLabel loginExample2;
     private JTextField emailTextField;
     private JPasswordField passwordTextField;
     private JLabel loginButton;
@@ -111,6 +110,9 @@ public class LoginMenu extends JFrame {
 
     private void initComponents() {
         mainPanel = new JPanel(new MigLayout("center"));
+
+        loginExample1 = new JLabel("Manager: Carlsen.Andrew36@gmail.com - Civinomics");
+        loginExample2 = new JLabel("Support Assistant: Carlsen.Rasmus58@gmail.com - Ecodesk");
 
         message = new JLabel();
         message.setFont(new Font("Ubuntu", Font.PLAIN, 16));
@@ -199,6 +201,8 @@ public class LoginMenu extends JFrame {
         employeeController = new EmployeeController();
 
         mainPanel.add(logo, "wrap, center, gapy 30");
+        mainPanel.add(loginExample1, "wrap, center");
+        mainPanel.add(loginExample2, "wrap, center");
         mainPanel.add(message, "wrap, center, gapy 35");
         mainPanel.add(emailTextField, "wrap, center, height 30, grow");
         mainPanel.add(passwordTextField, "wrap, center, gapy 10, height 30, grow");
@@ -220,44 +224,10 @@ public class LoginMenu extends JFrame {
     }
 
     public static void main(String[] args) {
-        Runnable updateChecker = () -> {
-            System.out.println("Starting update checker");
-            int sleepTime = 2 * 1000; //1 minute
-            delayTime = 0;
-
-            while (true) {
-                try {
-                    if (currentMenu != null) {
-                        if (currentMenu.checkForUpdates()) {
-                            System.out.println("In the checker - called update");
-                            currentMenu.updateMenu();
-                        }
-                    }
-
-                    Thread.sleep(sleepTime + delayTime);
-                    delayTime = 0;
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-
-        Thread thread1 = new Thread(updateChecker);
-        thread1.start();
-
         start();
-
     }
 
     public static Employee getLoggedEmployee() {
         return loggedEmployee;
-    }
-
-    public static void setCurrentMenu(Updatable currentMenu) {
-        LoginMenu.currentMenu = currentMenu;
-    }
-
-    public static void addDelayTime(int delayTime) {
-        LoginMenu.delayTime = delayTime;
     }
 }

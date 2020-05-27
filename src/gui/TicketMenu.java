@@ -10,6 +10,7 @@ import model.Inquiry;
 import model.Response;
 import model.Ticket;
 import net.miginfocom.swing.MigLayout;
+import org.w3c.dom.css.RGBColor;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,7 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class TicketMenu extends JFrame implements Updatable {
+public class TicketMenu extends JFrame {
 
     /**
      * Instance variables
@@ -63,13 +64,13 @@ public class TicketMenu extends JFrame implements Updatable {
     private JLabel lblInquiryTitle;
     private JLabel lblInquiryDescription;
     private JTextField txtInquiryTitle;
-    private JTextField txtInquiryDescription;
+    private JTextArea txtInquiryDescription;
     private JButton sendInquiryButton;
 
     private JLabel lblResponseTitle;
     private JLabel lblResponseDescription;
     private JTextField txtResponseTitle;
-    private JTextField txtResponseDescription;
+    private JTextArea txtResponseDescription;
     private JButton sendResponseButton;
 
     private JComboBox<String> comboBoxEmployees;
@@ -80,19 +81,17 @@ public class TicketMenu extends JFrame implements Updatable {
     private ResponseController responseController;
     private EmployeeController employeeController;
 
-    private Ticket currentTicket;
-
+    private boolean fullAccess;
     /**
      * Launch the application.
      */
 
-    public static void start(Ticket ticket) {
+    public static void start(Ticket ticket, boolean fullAccess) {
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
                     // ticket.setEndDate(ticket.getStartDate());
-                    TicketMenu frame = new TicketMenu(ticket);
-                    LoginMenu.setCurrentMenu(frame);
+                    TicketMenu frame = new TicketMenu(ticket, fullAccess);
                     frame.setTitle("Ticket Menu");
                     frame.setVisible(true);
                 } catch (Exception e) {
@@ -102,53 +101,18 @@ public class TicketMenu extends JFrame implements Updatable {
         });
     }
 
-    @Override
-    public boolean checkForUpdates() {
-        boolean updateFound = false;
-        try {
-            if (ticketController.checkForUpdates()) {
-                updateFound = true;
-            }
-        } catch (DataAccessException e) {
-            e.printStackTrace();
-        }
-
-        return updateFound;
-    }
-
-    @Override
-    public void updateMenu() {
-        Object[] options = {"Yes", "Remind me in 2 minutes"};
-        int dialogResult = JOptionPane.showOptionDialog(rootPane, "Update found, update?", "Update found", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-        if (dialogResult == 0) {
-            System.out.println("Updating...");
-
-            try {
-                currentTicket = ticketController.findTicketByID(currentTicket.getTicketID(), true);
-            } catch (DataAccessException e) {
-                e.printStackTrace();
-            }
-
-            createComponents(currentTicket);
-            createGUI();
-            LoginMenu.addDelayTime(2 * 60 * 1000);
-        } else {
-            LoginMenu.addDelayTime(2 * 60 * 1000);
-        }
-    }
-
     /**
      * Create the frame.
      */
-    public TicketMenu(Ticket ticket) {
+    public TicketMenu(Ticket ticket, boolean fullAccess) {
+        this.fullAccess  = fullAccess;
         ticketController = new TicketController();
         inquiryController = new InquiryController();
         responseController = new ResponseController();
         employeeController = new EmployeeController();
-
-        currentTicket = ticket;
-        createComponents(currentTicket);
+        createComponents(ticket);
         createGUI();
+        checkAccess();
     }
 
     private void createComponents(Ticket ticket) {
@@ -216,23 +180,25 @@ public class TicketMenu extends JFrame implements Updatable {
         lblInquiryTitle = new JLabel("Inquiry Title: ");
         lblInquiryDescription = new JLabel("Inquiry Description: ");
         txtInquiryTitle = new JTextField(20);
-        txtInquiryDescription = new JTextField(20);
+        txtInquiryDescription = new JTextArea(10, 20);
         sendInquiryButton = new JButton("Send Inquiry");
         sendInquiryButton.addActionListener(e -> {
             createInquiry(ticket);
-            dispose();
-            TicketMenu.start(ticket);
+//            dispose();
+//            TicketMenu.start(ticket);
+            refreshMessagePanel(ticket);
         });
 
         lblResponseTitle = new JLabel("Response Title: ");
         lblResponseDescription = new JLabel("Response Description: ");
         txtResponseTitle = new JTextField(20);
-        txtResponseDescription = new JTextField(20);
+        txtResponseDescription = new JTextArea(10, 20);
         sendResponseButton = new JButton("Send Response");
         sendResponseButton.addActionListener(e -> {
             createResponse(ticket);
-            dispose();
-            TicketMenu.start(ticket);
+//            dispose();
+//            TicketMenu.start(ticket);
+            refreshMessagePanel(ticket);
         });
 
         try {
@@ -255,37 +221,36 @@ public class TicketMenu extends JFrame implements Updatable {
         });
     }
 
-    private void setWindowSizeAndLocation() {
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        double width = screenSize.getWidth() / 1.5;
-        double height = screenSize.getHeight() / 1.5;
-        screenSize.setSize(width, height);
-
-        setPreferredSize(screenSize);
-        setLocation((int) width / 4, (int) height / 4);
-    }
-
     private void createGUI() {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setContentPane(mainPanel);
-        setWindowSizeAndLocation();
+        MenuUtil.setWindowSizeAndLocation(this);
 
         mainPanel.setLayout(new MigLayout());
         ticketPanel.setLayout(new MigLayout());
         customerPanel.setLayout(new MigLayout());
         employeePanel.setLayout(new MigLayout());
-        conversationPanel.setLayout(new MigLayout());
+        conversationPanel.setLayout(new MigLayout(
+                "",
+                "[grow]",
+                ""
+        ));
         createInquiryPanel.setLayout(new MigLayout());
         createResponsePanel.setLayout(new MigLayout());
 
-        mainPanel.add(ticketPanel, "split 3");
-        mainPanel.add(customerPanel, "gapleft 75");
-        mainPanel.add(employeePanel, "wrap, gapleft 75");
-        mainPanel.add(scrollPane, "wrap");
-        mainPanel.add(createInquiryPanel, "split 2");
+        mainPanel.add(ticketPanel, "split 3, span, grow, push");
+        mainPanel.add(customerPanel, "span, grow, push");
+        mainPanel.add(employeePanel, "wrap, span, grow, push");
+        mainPanel.add(scrollPane, "wrap, span, grow");
+        mainPanel.add(createInquiryPanel, "split 2, span, grow");
         mainPanel.add(createResponsePanel, "");
 
-        conversationsList.forEach(e -> conversationPanel.add(e, "wrap"));
+        conversationsList.forEach(e -> {
+            if (e.getName().equals("inquiry"))
+                conversationPanel.add(e, "wrap, align left");
+            else
+                conversationPanel.add(e, "wrap, align right");
+        });
 
         ticketPanel.add(lblTicket, "wrap");
         ticketPanel.add(lblTicketID, "wrap");
@@ -330,6 +295,7 @@ public class TicketMenu extends JFrame implements Updatable {
         JPanel inquiryPanel = new JPanel();
         inquiryPanel.setLayout(new MigLayout());
         conversationsList.add(inquiryPanel);
+        inquiryPanel.setName("inquiry");
 
         JLabel lblInquiry = new JLabel("Inquiry");
         JLabel lblCategory = new JLabel("Category: " + inquiry.getCategory().getLabel());
@@ -343,7 +309,9 @@ public class TicketMenu extends JFrame implements Updatable {
         inquiryPanel.add(lblTitle, "wrap");
         inquiryPanel.add(lblDescription, "wrap");
 
-        inquiryPanel.setBorder(BorderFactory.createLineBorder(Color.blue));
+        inquiryPanel.setBorder(BorderFactory.createLineBorder(Color.red));
+        inquiryPanel.setBackground(new Color(250, 125, 130));
+        inquiryPanel.setForeground(Color.white);
 
         try {
             inquiry.setResponses(new InquiryController().findInquiryByID(inquiry.getInquiryID(), true).getResponses());
@@ -351,13 +319,14 @@ public class TicketMenu extends JFrame implements Updatable {
             e.printStackTrace();
         }
 
-        inquiry.getResponses().forEach(e -> getResponsePanel(e));
+        inquiry.getResponses().forEach(this::getResponsePanel);
     }
 
     private void getResponsePanel(Response response) {
         JPanel responsePanel = new JPanel();
         responsePanel.setLayout(new MigLayout());
         conversationsList.add(responsePanel);
+        responsePanel.setName("response");
 
         JLabel lblResponse = new JLabel("Response");
         if (response.getEmployee() != null)
@@ -372,7 +341,9 @@ public class TicketMenu extends JFrame implements Updatable {
         responsePanel.add(lblTitle, "wrap");
         responsePanel.add(lblDescription, "wrap");
 
-        responsePanel.setBorder(BorderFactory.createLineBorder(Color.red));
+        responsePanel.setBorder(BorderFactory.createLineBorder(Color.blue));
+        responsePanel.setBackground(new Color(125, 200, 250));
+        responsePanel.setForeground(Color.WHITE);
     }
 
     private void createInquiry(Ticket ticket) {
@@ -442,6 +413,44 @@ public class TicketMenu extends JFrame implements Updatable {
             comboBoxTicketStatus.setEnabled(true);
             comboBoxTicketPriority.setEnabled(true);
             sendResponseButton.setEnabled(true);
+        }
+    }
+
+    private void refreshMessagePanel (Ticket ticket) {
+        scrollPane.remove(conversationPanel);
+        conversationPanel = new JPanel();
+        conversationPanel.setLayout(new MigLayout(
+                "",
+                "[grow]",
+                ""
+        ));
+        ticket.getInquiries().forEach(e -> getInquiryPanel(e));
+        conversationsList.forEach(e -> {
+            if (e.getName().equals("inquiry"))
+                conversationPanel.add(e, "wrap, align left");
+            else
+                conversationPanel.add(e, "wrap, align right");
+        });
+        scrollPane.setViewportView(conversationPanel);
+    }
+
+    private void checkAccess() {
+        if (!fullAccess) {
+            comboBoxEmployees.setEnabled(false);
+            lblResponseTitle.setVisible(false);
+            lblResponseDescription.setVisible(false);
+            txtResponseTitle.setVisible(false);
+            txtResponseDescription.setVisible(false);
+            sendResponseButton.setVisible(false);
+            comboBoxTicketPriority.setEnabled(false);
+            comboBoxTicketStatus.setEnabled(false);
+        }
+        else {
+            lblInquiryTitle.setVisible(false);
+            lblInquiryDescription.setVisible(false);
+            txtInquiryTitle.setVisible(false);
+            txtInquiryDescription.setVisible(false);
+            sendInquiryButton.setVisible(false);
         }
     }
 }

@@ -13,8 +13,6 @@ import java.util.List;
 public class TicketController {
     private final TicketIF ticketDB;
 
-    private Ticket currentTicket;
-
     public TicketController() {
         ticketDB = new TicketDB();
     }
@@ -26,13 +24,13 @@ public class TicketController {
     public Ticket findTicketByID(int id, boolean fullAssociation) throws DataAccessException {
         return ticketDB.findByID(id, fullAssociation);
     }
-
+    
     public List<Ticket> findTicketsByEmployee(Employee employee, boolean fullAssociation) throws DataAccessException {
-        return ticketDB.findTicketsByEmployee(employee, fullAssociation);
+    	return ticketDB.findTicketsByEmployee(employee, fullAssociation);
     }
-
+    
     public List<Ticket> findTicketsByCustomer(Customer customer, boolean fullAssociation) throws DataAccessException {
-        return ticketDB.findTicketsByCustomer(customer, fullAssociation);
+    	return ticketDB.findTicketsByCustomer(customer, fullAssociation);
     }
 
     public List<Ticket> getAllTickets(boolean fullAssociation) throws DataAccessException {
@@ -40,7 +38,7 @@ public class TicketController {
     }
 
     public boolean updateTicket(Ticket ticketToUpdate, String newComplaintStatus, String newPriority,
-                                LocalDateTime newStartDate, LocalDateTime newEndDate, Employee newEmployee, Customer newCustomer)
+            LocalDateTime newStartDate, LocalDateTime newEndDate, Employee newEmployee, Customer newCustomer)
             throws DataAccessException {
         Ticket ticket = new Ticket();
         ticket.setComplaintStatus(newComplaintStatus).setPriority(newPriority).setStartDate(newStartDate)
@@ -51,10 +49,5 @@ public class TicketController {
 
     public boolean deleteTicket(int id) throws DataAccessException {
         return ticketDB.delete(id);
-    }
-
-    public boolean checkForUpdates() throws DataAccessException {
-        //TODO implement versionChecking
-        return true;
     }
 }

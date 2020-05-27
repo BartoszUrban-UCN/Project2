@@ -78,8 +78,6 @@ public class MainMenu extends JFrame {
         EventQueue.invokeLater(() -> {
             try {
                 MainMenu frame = new MainMenu(justMyTickets);
-
-                LoginMenu.setCurrentMenu(null);
                 frame.setTitle("Main Menu");
                 frame.setVisible(true);
             } catch (Exception e) {
@@ -205,7 +203,7 @@ public class MainMenu extends JFrame {
             public void mouseClicked(MouseEvent e) {
                 Ticket ticket = getSelectedTicket();
                 if (ticket != null) {
-                    TicketMenu.start(ticket);
+                    TicketMenu.start(ticket, true);
                 }
             }
         });
@@ -224,7 +222,7 @@ public class MainMenu extends JFrame {
     private void createGUI() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setContentPane(mainPanel);
-        setWindowSizeAndLocation();
+        MenuUtil.setWindowSizeAndLocation(this);
 
         mainPanel.setLayout(new MigLayout());
         mainPanel.add(MenuBar.getInstance().getMainPanel(), "wrap, span, grow");

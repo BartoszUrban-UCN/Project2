@@ -2,7 +2,6 @@
 
     1. Close the resources in DBconnection.
     2. Very important to close the resources and connection.
-    3. Manager can response to any ticket.
     4. integration tests for create ticket.
     5. Delete every other DBconnection.connect and use a single one when we start
     6. add filters to main menu (employee)

@@ -292,7 +292,7 @@ public class CreateTicketMenu extends JFrame {
                 try {
                     Ticket ticket = ticketController.findTicketByID(
                             Integer.valueOf(model.getValueAt(ticketsTable.getSelectedRow(), 0).toString()), true);
-                    TicketMenu.start(ticket);
+                    TicketMenu.start(ticket,  false);
                 } catch (NumberFormatException | DataAccessException e) {
                     e.printStackTrace();
                 }
