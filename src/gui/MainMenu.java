@@ -78,6 +78,7 @@ public class MainMenu extends JFrame {
         EventQueue.invokeLater(() -> {
             try {
                 MainMenu frame = new MainMenu(justMyTickets);
+                LoginMenu.setCurrentMenu(null);
                 frame.setTitle("Main Menu");
                 frame.setVisible(true);
             } catch (Exception e) {

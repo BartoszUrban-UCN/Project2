@@ -38,6 +38,7 @@ public class TicketController {
     public Ticket findTicketByID(int id, boolean fullAssociation) throws DataAccessException {
         return ticketDB.findByID(id, fullAssociation);
     }
+
     public List<Ticket> findTicketsByEmployee(Employee employee, boolean fullAssociation) throws DataAccessException {
         return ticketDB.findTicketsByEmployee(employee, fullAssociation);
     }
@@ -51,7 +52,7 @@ public class TicketController {
     }
 
     public boolean updateTicket(Ticket ticketToUpdate, String newComplaintStatus, String newPriority,
-            LocalDateTime newStartDate, LocalDateTime newEndDate, Employee newEmployee, Customer newCustomer)
+                                LocalDateTime newStartDate, LocalDateTime newEndDate, Employee newEmployee, Customer newCustomer)
             throws DataAccessException {
         try {
             boolean result = false;
@@ -85,5 +86,18 @@ public class TicketController {
             }
             throw new DataAccessException("Transaction error while deleting a ticket.", e);
         }
+    }
+
+    public boolean checkForUpdates(Ticket currentTicket) {
+        boolean currentTicketIsDifferent = false;
+        try {
+            if (!findTicketByID(currentTicket.getTicketID(), true).getInquiries().equals(currentTicket.getInquiries())) {
+                currentTicketIsDifferent = true;
+            }
+        } catch (DataAccessException e) {
+            e.printStackTrace();
+        }
+
+        return currentTicketIsDifferent;
     }
 }

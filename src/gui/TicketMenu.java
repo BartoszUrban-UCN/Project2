@@ -10,7 +10,6 @@ import model.Inquiry;
 import model.Response;
 import model.Ticket;
 import net.miginfocom.swing.MigLayout;
-import org.w3c.dom.css.RGBColor;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,7 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class TicketMenu extends JFrame {
+public class TicketMenu extends JFrame implements Updatable {
 
     /**
      * Instance variables
@@ -82,6 +81,23 @@ public class TicketMenu extends JFrame {
     private EmployeeController employeeController;
 
     private boolean fullAccess;
+    private Ticket currentTicket;
+
+    /**
+     * Create the frame.
+     */
+    public TicketMenu(Ticket ticket, boolean fullAccess) {
+        currentTicket = ticket;
+        this.fullAccess = fullAccess;
+        ticketController = new TicketController();
+        inquiryController = new InquiryController();
+        responseController = new ResponseController();
+        employeeController = new EmployeeController();
+        createComponents(currentTicket);
+        createGUI();
+        checkAccess();
+    }
+
     /**
      * Launch the application.
      */
@@ -92,6 +108,7 @@ public class TicketMenu extends JFrame {
                 try {
                     // ticket.setEndDate(ticket.getStartDate());
                     TicketMenu frame = new TicketMenu(ticket, fullAccess);
+                    LoginMenu.setCurrentMenu(frame);
                     frame.setTitle("Ticket Menu");
                     frame.setVisible(true);
                 } catch (Exception e) {
@@ -101,18 +118,32 @@ public class TicketMenu extends JFrame {
         });
     }
 
-    /**
-     * Create the frame.
-     */
-    public TicketMenu(Ticket ticket, boolean fullAccess) {
-        this.fullAccess  = fullAccess;
-        ticketController = new TicketController();
-        inquiryController = new InquiryController();
-        responseController = new ResponseController();
-        employeeController = new EmployeeController();
-        createComponents(ticket);
-        createGUI();
-        checkAccess();
+    @Override
+    public boolean checkForUpdates() {
+        boolean updateFound = false;
+        if (ticketController.checkForUpdates(currentTicket)) {
+            updateFound = true;
+        }
+
+        return updateFound;
+    }
+
+    @Override
+    public void updateMenu() {
+        Object[] options = {"Yes", "Remind me in 2 minutes"};
+        int dialogResult = JOptionPane.showOptionDialog(rootPane, "Update found, update?", "Update found", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+        if (dialogResult == 0) {
+            System.out.println("Updating...");
+
+            try {
+                currentTicket = ticketController.findTicketByID(currentTicket.getTicketID(), true);
+            } catch (DataAccessException e) {
+                e.printStackTrace();
+            }
+
+            refreshMessagePanel(currentTicket);
+        }
+        LoginMenu.addDelayTime(2 * 60 * 1000);
     }
 
     private void createComponents(Ticket ticket) {
@@ -416,7 +447,7 @@ public class TicketMenu extends JFrame {
         }
     }
 
-    private void refreshMessagePanel (Ticket ticket) {
+    private void refreshMessagePanel(Ticket ticket) {
         scrollPane.remove(conversationPanel);
         conversationPanel = new JPanel();
         conversationPanel.setLayout(new MigLayout(
@@ -444,8 +475,7 @@ public class TicketMenu extends JFrame {
             sendResponseButton.setVisible(false);
             comboBoxTicketPriority.setEnabled(false);
             comboBoxTicketStatus.setEnabled(false);
-        }
-        else {
+        } else {
             lblInquiryTitle.setVisible(false);
             lblInquiryDescription.setVisible(false);
             txtInquiryTitle.setVisible(false);

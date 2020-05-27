@@ -19,6 +19,8 @@ public class LoginMenu extends JFrame {
     private static final long serialVersionUID = 1L;
 
     private static Employee loggedEmployee;
+    private static Updatable currentMenu;
+    private static int delayTime;
 
     private JPanel mainPanel;
     private JLabel logo;
@@ -224,7 +226,40 @@ public class LoginMenu extends JFrame {
     }
 
     public static void main(String[] args) {
+        Runnable updateChecker = () -> {
+            System.out.println("Starting update checker");
+            int sleepTime = 2 * 1000; //1 minute
+            delayTime = 0;
+
+            while (true) {
+                try {
+                    if (currentMenu != null) {
+                        if (currentMenu.checkForUpdates()) {
+                            System.out.println("In the checker - called update");
+                            currentMenu.updateMenu();
+                        }
+                    }
+
+                    Thread.sleep(sleepTime + delayTime);
+                    delayTime = 0;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        Thread thread1 = new Thread(updateChecker);
+        thread1.start();
+
         start();
+    }
+
+    public static void setCurrentMenu(Updatable currentMenu) {
+        LoginMenu.currentMenu = currentMenu;
+    }
+
+    public static void addDelayTime(int delayTime) {
+        LoginMenu.delayTime = delayTime;
     }
 
     public static Employee getLoggedEmployee() {
