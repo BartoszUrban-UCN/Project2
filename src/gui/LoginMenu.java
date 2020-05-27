@@ -227,6 +227,8 @@ public class LoginMenu extends JFrame {
 
     public static void main(String[] args) {
         Runnable updateChecker = () -> {
+            Thread.currentThread().setName("UpdateCheckerThread");
+
             System.out.println("Starting update checker");
             int sleepTime = 2 * 1000; //1 minute
             delayTime = 0;
@@ -255,6 +257,7 @@ public class LoginMenu extends JFrame {
     }
 
     public static void setCurrentMenu(Updatable currentMenu) {
+        //addDelayTime(1 * 60 * 1000);
         LoginMenu.currentMenu = currentMenu;
     }
 

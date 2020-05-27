@@ -51,6 +51,24 @@ public class TicketController {
         return ticketDB.getAll(fullAssociation);
     }
 
+    public boolean updateVersion(Ticket ticketToUpdate) throws DataAccessException {
+        try {
+            boolean result = false;
+            DBConnection.getInstance().startTransaction();
+            result = ticketDB.updateVersion(ticketToUpdate);
+            DBConnection.getInstance().commitTransaction();
+            return result;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            try {
+                DBConnection.getInstance().rollbackTransaction();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            throw new DataAccessException("Transaction error while updating a ticket.", e);
+        }
+    }
+
     public boolean updateTicket(Ticket ticketToUpdate, String newComplaintStatus, String newPriority,
                                 LocalDateTime newStartDate, LocalDateTime newEndDate, Employee newEmployee, Customer newCustomer)
             throws DataAccessException {
@@ -58,9 +76,14 @@ public class TicketController {
             boolean result = false;
             DBConnection.getInstance().startTransaction();
             Ticket ticket = new Ticket();
-            ticket.setComplaintStatus(newComplaintStatus).setPriority(newPriority).setStartDate(newStartDate)
-                    .setEndDate(newEndDate).setEmployee(newEmployee).setCustomer(newCustomer);
-            result = ticketDB.update(ticketToUpdate);
+            ticket.setComplaintStatus(newComplaintStatus)
+                    .setPriority(newPriority)
+                    .setStartDate(newStartDate)
+                    .setEndDate(newEndDate)
+                    .setEmployee(newEmployee)
+                    .setCustomer(newCustomer)
+                    .setVersion(ticketToUpdate.getVersion());
+            result = ticketDB.update(ticket);
             DBConnection.getInstance().commitTransaction();
             return result;
         } catch (SQLException e) {
@@ -91,7 +114,7 @@ public class TicketController {
     public boolean checkForUpdates(Ticket currentTicket) {
         boolean currentTicketIsDifferent = false;
         try {
-            if (!findTicketByID(currentTicket.getTicketID(), true).getInquiries().equals(currentTicket.getInquiries())) {
+            if (findTicketByID(currentTicket.getTicketID(), false).getVersion() > currentTicket.getVersion()) {
                 currentTicketIsDifferent = true;
             }
         } catch (DataAccessException e) {

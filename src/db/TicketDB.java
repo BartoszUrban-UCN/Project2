@@ -126,11 +126,18 @@ public class TicketDB implements TicketIF {
     @Override
     public boolean update(Ticket record) throws DataAccessException {
         String UPDATE_TICKET = SqlUtil.buildUpdate("Ticket", "TicketID", "StartDate", "EndDate", "Priority",
-                "ComplaintStatus", "EmployeeID", "CustomerID");
+                "ComplaintStatus", "EmployeeID", "CustomerID", "VersionNo");
+
         return DBConnection.executeUpdate(UPDATE_TICKET, record.getStartDate(), record.getEndDate(),
                 record.getPriority().getTitle(), record.getComplaintStatus().getTitle(),
                 record.getEmployee() != null ? record.getEmployee().getPersonID() : null,
-                record.getCustomer() != null ? record.getCustomer().getPersonID() : null, record.getTicketID()) > 0;
+                record.getCustomer() != null ? record.getCustomer().getPersonID() : null, record.getVersion(), record.getTicketID()) > 0;
+    }
+
+    public boolean updateVersion(Ticket record) throws DataAccessException {
+        String UPDATE_TICKET_VERSION = SqlUtil.buildUpdate("Ticket", "TicketID", "VersionNo");
+
+        return DBConnection.executeUpdate(UPDATE_TICKET_VERSION, record.getVersion(), record.getTicketID()) > 0;
     }
 
     /**
@@ -186,14 +193,14 @@ public class TicketDB implements TicketIF {
                     .setEndDate(resultSet.getTimestamp("EndDate") != null
                             ? resultSet.getTimestamp("EndDate").toLocalDateTime()
                             : null)
-                    .setPriority(resultSet.getString("Priority"));
+                    .setPriority(resultSet.getString("Priority"))
+                    .setVersion(resultSet.getInt("VersionNo"));
 
             if (fullAssociation) {
                 ticket.setEmployee(new EmployeeDB().findByID(resultSet.getInt("EmployeeID"), false))
                         .setCustomer(new CustomerDB().findByID(resultSet.getInt("CustomerID"), false))
                         .setInquiries((ArrayList<Inquiry>) new InquiryDB().findInquiriesByTicketID(resultSet.getInt("TicketID"), false));
             }
-
             return ticket;
         } catch (SQLException ex) {
             throw new DataAccessException("Could not build ticket object", ex);

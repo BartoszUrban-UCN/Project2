@@ -93,7 +93,7 @@ public class TicketMenu extends JFrame implements Updatable {
         inquiryController = new InquiryController();
         responseController = new ResponseController();
         employeeController = new EmployeeController();
-        createComponents(currentTicket);
+        createComponents(ticket);
         createGUI();
         checkAccess();
     }
@@ -130,6 +130,7 @@ public class TicketMenu extends JFrame implements Updatable {
 
     @Override
     public void updateMenu() {
+        System.out.println(Thread.currentThread().getName());
         Object[] options = {"Yes", "Remind me in 2 minutes"};
         int dialogResult = JOptionPane.showOptionDialog(rootPane, "Update found, update?", "Update found", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
         if (dialogResult == 0) {
@@ -383,8 +384,11 @@ public class TicketMenu extends JFrame implements Updatable {
                 .setTimestamp(LocalDateTime.now());
         inquiryController = new InquiryController();
         try {
-            if (inquiryController.createInquiry(inquiry, ticket.getTicketID()))
+            if (inquiryController.createInquiry(inquiry, ticket.getTicketID())) {
+                ticket.incrementVersion();
+                ticketController.updateVersion(ticket);
                 ticket.addInquiry(inquiry);
+            }
         } catch (DataAccessException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -400,6 +404,8 @@ public class TicketMenu extends JFrame implements Updatable {
 
         try {
             if (responseController.createResponse(response, inquiry.getInquiryID())) {
+                ticket.incrementVersion();
+                ticketController.updateVersion(ticket);
                 inquiry.addResponse(response);
             }
         } catch (DataAccessException e) {
@@ -410,6 +416,7 @@ public class TicketMenu extends JFrame implements Updatable {
 
     private void updateTicket(Ticket ticket) {
         try {
+            ticket.incrementVersion();
             ticketController.updateTicket(ticket,
                     ticket.getComplaintStatus().getTitle(),
                     ticket.getPriority().getTitle(),

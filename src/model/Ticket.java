@@ -54,6 +54,8 @@ public class Ticket {
     /**
      * Instance Variables
      */
+    private int version;
+
     private int ticketID;
     private TicketComplaintStatus complaintStatus;
     private Priority priority;
@@ -72,12 +74,14 @@ public class Ticket {
      * Constructors
      */
     public Ticket() {
+        version = 0;
         priority = Priority.MEDIUM;
         complaintStatus = TicketComplaintStatus.INPROGRESS;
         startDate = LocalDateTime.now();
     }
 
     public Ticket(String complaintStatus, String priority) {
+        version = 0;
         setComplaintStatus(complaintStatus);
         setPriority(priority);
         inquiries = new ArrayList<>();
@@ -170,5 +174,19 @@ public class Ticket {
     public void removeInquiry(Inquiry inquiry) {
         if (inquiry != null)
             inquiries.removeIf(element -> element == inquiry);
+    }
+
+    public int getVersion() {
+        return version;
+    }
+
+    public Ticket setVersion(int version) {
+        this.version = version;
+        return this;
+    }
+
+    public Ticket incrementVersion() {
+        this.version += 1;
+        return this;
     }
 }

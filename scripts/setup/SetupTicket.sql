@@ -12,6 +12,8 @@ CREATE TABLE Ticket
     EmployeeID INT NULL,
     CustomerID INT NOT NULL,
 
+    VersionNo INT DEFAULT 0,
+
     CONSTRAINT PK_Ticket PRIMARY KEY (TicketID),
     CONSTRAINT FK_Ticket_Customer FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID),
     CONSTRAINT FK_Ticket_Employee FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID)
