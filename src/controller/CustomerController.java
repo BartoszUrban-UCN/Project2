@@ -2,10 +2,12 @@ package controller;
 
 import db.CustomerDB;
 import db.CustomerIF;
+import db.DBConnection;
 import db.DataAccessException;
 import model.Address;
 import model.Customer;
 
+import java.sql.SQLException;
 import java.util.List;
 
 public class CustomerController {
@@ -18,11 +20,22 @@ public class CustomerController {
     }
 
     public boolean createCustomer(Customer customer) throws DataAccessException {
-        if (findCustomerByEmail(customer.getEmail(), false) == null) {
-            addressController.createAddress(customer.getAddress());
-            return customerDB.insert(customer);
+        try {
+            boolean result = false;
+            DBConnection.getInstance().startTransaction();
+            if (findCustomerByEmail(customer.getEmail(), false) == null) {
+                addressController.createAddress(customer.getAddress());
+                result = customerDB.insert(customer);
+            }
+            DBConnection.getInstance().commitTransaction();
+            return result;
+        } catch (SQLException e) {
+            try {
+                DBConnection.getInstance().rollbackTransaction();
+            } catch (SQLException e1) {
+            }
+            throw new DataAccessException("Transaction error while creating a customer.", e);
         }
-        return false;
     }
 
     public Customer findCustomerByID(int ID, boolean fullAssociation) throws DataAccessException {
@@ -40,24 +53,43 @@ public class CustomerController {
     public boolean updateCustomer(Customer customerToUpdate, String newFirstName, String newLastName,
             String newPhoneNumber, String newEmail, String newCustomerType, String newCompanyName,
             Address addressToUpdate) throws DataAccessException {
-        if (customerDB.findByEmail(newEmail, false) == null) {
-            customerToUpdate
-                    .setFirstName(newFirstName)
-                    .setLastName(newLastName)
-                    .setPhoneNumber(newPhoneNumber)
-                    .setEmail(newEmail);
+        try {
+            boolean result = false;
+            DBConnection.getInstance().startTransaction();
+            if (customerDB.findByEmail(newEmail, false) == null) {
+                customerToUpdate.setFirstName(newFirstName).setLastName(newLastName).setPhoneNumber(newPhoneNumber)
+                        .setEmail(newEmail);
 
-            customerToUpdate
-                    .setCustomerType(newCustomerType)
-                    .setCompanyName(newCompanyName)
-                    .setAddress(addressToUpdate);
+                customerToUpdate.setCustomerType(newCustomerType).setCompanyName(newCompanyName)
+                        .setAddress(addressToUpdate);
 
-            return customerDB.update(customerToUpdate);
+                result = customerDB.update(customerToUpdate);
+            }
+
+            DBConnection.getInstance().commitTransaction();
+            return result;
+        } catch (SQLException e) {
+            try {
+                DBConnection.getInstance().rollbackTransaction();
+            } catch (SQLException e1) {
+            }
+            throw new DataAccessException("Transaction error while updating a customer.", e);
         }
-        return false;
     }
 
     public boolean deleteCustomer(int ID) throws DataAccessException {
-        return customerDB.delete(ID);
+        try {
+            boolean result = false;
+            DBConnection.getInstance().startTransaction();
+            result = customerDB.delete(ID);
+            DBConnection.getInstance().commitTransaction();
+            return result;
+        } catch (SQLException e) {
+            try {
+                DBConnection.getInstance().rollbackTransaction();
+            } catch (SQLException e1) {
+            }
+            throw new DataAccessException("Transaction error while deleting a customer.", e);
+        }
     }
 }

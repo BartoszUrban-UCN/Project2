@@ -25,7 +25,6 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
 
 import controller.CustomerController;
 import controller.InquiryController;
@@ -277,7 +276,7 @@ public class CreateTicketMenu extends JFrame {
     private void initComponentsOldTicket() {
         ticketsTable = new JTable(model);
         ticketsScrollPane = new JScrollPane(ticketsTable);
-        email = new JTextField("Email", 30);
+        email = new JTextField("Agard.Peter65@gmail.com", 30);
         nameField = new JLabel("");
         nameField.setVisible(false);
         searchButton = new JButton("Search for account");
@@ -292,7 +291,7 @@ public class CreateTicketMenu extends JFrame {
                 try {
                     Ticket ticket = ticketController.findTicketByID(
                             Integer.valueOf(model.getValueAt(ticketsTable.getSelectedRow(), 0).toString()), true);
-                    TicketMenu.start(ticket,  false);
+                    TicketMenu.start(ticket, false);
                 } catch (NumberFormatException | DataAccessException e) {
                     e.printStackTrace();
                 }

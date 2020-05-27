@@ -2,10 +2,12 @@ package controller;
 
 import db.AddressDB;
 import db.AddressIF;
+import db.DBConnection;
 import db.DataAccessException;
 import model.Address;
 import model.Department;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,9 +27,20 @@ public class AddressController {
      * @param address
      */
     public boolean createAddress(Address address) throws DataAccessException {
-        if (addressDB.findEquals(address) == null)
-            return addressDB.insert(address);
-        return false;
+        try {
+            boolean result = false;
+            DBConnection.getInstance().startTransaction();
+            if (addressDB.findEquals(address) == null)
+                result = addressDB.insert(address);
+            DBConnection.getInstance().commitTransaction();
+            return result;
+        } catch (SQLException e) {
+            try {
+                DBConnection.getInstance().rollbackTransaction();
+            } catch (SQLException e1) {
+            }
+            throw new DataAccessException("Transaction error while creating an address.", e);
+        }
     }
 
     /**
@@ -49,26 +62,44 @@ public class AddressController {
     /**
      * Update an address with all the fields
      */
-    public boolean updateAddress(Address addressToUpdate, String country, String zipCode,
-            String streetName, int streetNumber, ArrayList<Department> departments) throws DataAccessException {
+    public boolean updateAddress(Address addressToUpdate, String country, String zipCode, String streetName,
+            int streetNumber, ArrayList<Department> departments) throws DataAccessException {
+        try {
+            boolean result = false;
+            DBConnection.getInstance().startTransaction();
+            addressToUpdate.setCountry(country).setZipCode(zipCode).setStreetName(streetName);
+            addressToUpdate.setDepartments(departments);
 
-        addressToUpdate
-                .setCountry(country)
-                .setZipCode(zipCode)
-                .setStreetName(streetName);
-        addressToUpdate
-                .setDepartments(departments);
-
-        if (addressDB.findEquals(addressToUpdate) == null)
-            return addressDB.update(addressToUpdate);
-        return false;
+            if (addressDB.findEquals(addressToUpdate) == null)
+                result = addressDB.update(addressToUpdate);
+            DBConnection.getInstance().commitTransaction();
+            return result;
+        } catch (SQLException e) {
+            try {
+                DBConnection.getInstance().rollbackTransaction();
+            } catch (SQLException e1) {
+            }
+            throw new DataAccessException("Transaction error while updating an address.", e);
+        }
     }
 
     /**
      * Delete an address from the database by ID
      */
     public boolean deleteAddress(int ID) throws DataAccessException {
-        return addressDB.delete(ID);
+        try {
+            boolean result = false;
+            DBConnection.getInstance().startTransaction();
+            result = addressDB.delete(ID);
+            DBConnection.getInstance().commitTransaction();
+            return result;
+        } catch (SQLException e) {
+            try {
+                DBConnection.getInstance().rollbackTransaction();
+            } catch (SQLException e1) {
+            }
+            throw new DataAccessException("Transaction error while deleting an address.", e);
+        }
     }
 
     public Address findEquals(Address address) throws DataAccessException {

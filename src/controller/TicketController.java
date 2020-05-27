@@ -1,5 +1,6 @@
 package controller;
 
+import db.DBConnection;
 import db.DataAccessException;
 import db.TicketDB;
 import db.TicketIF;
@@ -7,6 +8,7 @@ import model.Customer;
 import model.Employee;
 import model.Ticket;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,19 +20,30 @@ public class TicketController {
     }
 
     public boolean createTicket(Ticket ticket) throws DataAccessException {
-        return ticketDB.insert(ticket);
+        try {
+            boolean result = false;
+            DBConnection.getInstance().startTransaction();
+            result = ticketDB.insert(ticket);
+            DBConnection.getInstance().commitTransaction();
+            return result;
+        } catch (SQLException e) {
+            try {
+                DBConnection.getInstance().rollbackTransaction();
+            } catch (SQLException e1) {
+            }
+            throw new DataAccessException("Transaction error while creating a ticket.", e);
+        }
     }
 
     public Ticket findTicketByID(int id, boolean fullAssociation) throws DataAccessException {
         return ticketDB.findByID(id, fullAssociation);
     }
-    
     public List<Ticket> findTicketsByEmployee(Employee employee, boolean fullAssociation) throws DataAccessException {
-    	return ticketDB.findTicketsByEmployee(employee, fullAssociation);
+        return ticketDB.findTicketsByEmployee(employee, fullAssociation);
     }
-    
+
     public List<Ticket> findTicketsByCustomer(Customer customer, boolean fullAssociation) throws DataAccessException {
-    	return ticketDB.findTicketsByCustomer(customer, fullAssociation);
+        return ticketDB.findTicketsByCustomer(customer, fullAssociation);
     }
 
     public List<Ticket> getAllTickets(boolean fullAssociation) throws DataAccessException {
@@ -40,14 +53,37 @@ public class TicketController {
     public boolean updateTicket(Ticket ticketToUpdate, String newComplaintStatus, String newPriority,
             LocalDateTime newStartDate, LocalDateTime newEndDate, Employee newEmployee, Customer newCustomer)
             throws DataAccessException {
-        Ticket ticket = new Ticket();
-        ticket.setComplaintStatus(newComplaintStatus).setPriority(newPriority).setStartDate(newStartDate)
-                .setEndDate(newEndDate).setEmployee(newEmployee).setCustomer(newCustomer);
-
-        return ticketDB.update(ticketToUpdate);
+        try {
+            boolean result = false;
+            DBConnection.getInstance().startTransaction();
+            Ticket ticket = new Ticket();
+            ticket.setComplaintStatus(newComplaintStatus).setPriority(newPriority).setStartDate(newStartDate)
+                    .setEndDate(newEndDate).setEmployee(newEmployee).setCustomer(newCustomer);
+            result = ticketDB.update(ticketToUpdate);
+            DBConnection.getInstance().commitTransaction();
+            return result;
+        } catch (SQLException e) {
+            try {
+                DBConnection.getInstance().rollbackTransaction();
+            } catch (SQLException e1) {
+            }
+            throw new DataAccessException("Transaction error while updating a ticket.", e);
+        }
     }
 
-    public boolean deleteTicket(int id) throws DataAccessException {
-        return ticketDB.delete(id);
+    public boolean deleteTicket(int ID) throws DataAccessException {
+        try {
+            boolean result = false;
+            DBConnection.getInstance().startTransaction();
+            result = ticketDB.delete(ID);
+            DBConnection.getInstance().commitTransaction();
+            return result;
+        } catch (SQLException e) {
+            try {
+                DBConnection.getInstance().rollbackTransaction();
+            } catch (SQLException e1) {
+            }
+            throw new DataAccessException("Transaction error while deleting a ticket.", e);
+        }
     }
 }
